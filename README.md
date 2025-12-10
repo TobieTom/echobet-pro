@@ -1,160 +1,335 @@
-# EchoBet Pro 🎯
+<p align="center">
+  <img src="https://img.shields.io/badge/Solana-Devnet-9945FF?style=for-the-badge&logo=solana&logoColor=white" alt="Solana Devnet"/>
+  <img src="https://img.shields.io/badge/Anchor-0.32.1-blue?style=for-the-badge" alt="Anchor"/>
+  <img src="https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React"/>
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT License"/>
+</p>
 
-**Privacy-Preserving Prediction Markets on Solana**
+<h1 align="center">🎲 EchoBet Pro</h1>
 
-> Bet on real-world outcomes without revealing your position until the deadline. No front-running. No whale copying. Just fair markets.
+<p align="center">
+  <strong>Privacy-Preserving Prediction Markets on Solana</strong>
+</p>
+
+<p align="center">
+  <em>Bet privately. Reveal fairly. Win transparently.</em>
+</p>
+
+<p align="center">
+  A decentralized prediction market that uses commit-reveal cryptography to prevent front-running and ensure fair betting — built for the <strong>Indie.fun Hackathon</strong>.
+</p>
 
 ---
 
-## 🚀 Overview
-
-EchoBet Pro is a decentralized prediction market protocol built on Solana that uses a **commit-reveal scheme** to keep bets private until the betting period ends. Unlike traditional prediction markets where large bets move the odds and invite copycat behavior, EchoBet ensures every participant commits blindly—creating truly fair and manipulation-resistant markets.
-
-Built for the **Indie.fun Hackathon** (December 2025).
+<p align="center">
+  <a href="https://echobet-pro.vercel.app"><strong>🌐 Live Demo</strong></a> •
+  <a href="https://explorer.solana.com/address/HTDC5bDN6u7q1FCYnEuevztZM1ZqKcD9ujPTTLwNfTCc?cluster=devnet"><strong>📜 On-Chain Program</strong></a> •
+  <a href="#-quick-start"><strong>🚀 Quick Start</strong></a>
+</p>
 
 ---
 
-## ✨ Features
+## ✨ Core Features
 
 | Feature | Description |
 |---------|-------------|
-| **🔒 Private Betting** | Bets are hidden using SHA256 hash commitments until reveal phase |
-| **⚖️ Fair Markets** | No front-running, no whale copying, no last-second manipulation |
-| **💰 Proportional Payouts** | Winners split the losing pool based on their bet size |
-| **🔐 PDA Vaults** | All funds secured in program-controlled vaults |
-| **👥 Dual Resolution** | Markets can be resolved by oracle OR creator |
-| **⚡ Solana Speed** | Sub-second finality, minimal fees |
+| 🔒 **Private Betting** | Bets are hidden using SHA-256 commitment hashes until reveal phase |
+| ⚡ **Front-Running Protection** | Commit-reveal scheme prevents miners/validators from exploiting bet information |
+| 💰 **Trustless Payouts** | Winnings are distributed proportionally from PDA-controlled vaults |
+| 🎯 **Simple UX** | Clean interface for creating markets, placing bets, and claiming rewards |
+| 📊 **Real-Time Dashboard** | Track all your bets, reveals, and winnings in one place |
+| 🔐 **Non-Custodial** | Your funds stay in smart contract vaults — no central authority |
+
+---
+
+## 🔄 How It Works
+
+EchoBet Pro uses a **three-phase commit-reveal mechanism** to ensure fair and private betting:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           ECHOBET PRO FLOW                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   📝 PHASE 1: COMMIT          🔓 PHASE 2: REVEAL         🏆 PHASE 3: CLAIM │
+│   ──────────────────          ──────────────────         ───────────────── │
+│                                                                             │
+│   User places bet with        After deadline,            Winners claim      │
+│   hidden commitment:          user reveals:              proportional       │
+│                                                          payouts:           │
+│   hash(amount + outcome       • Original outcome                            │
+│        + random_salt)         • Secret salt              payout = stake ×   │
+│                               • Verified on-chain          (total_pool /    │
+│   ↓                           ↓                              winning_pool)  │
+│   Stored on-chain             Bet counted in pool        ↓                  │
+│   (hidden from others)        (YES or NO)                SOL transferred    │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Step-by-Step:
+
+1. **🔐 Commit Phase** — Place your bet by submitting a hash of your choice + amount + secret salt. Nobody can see your bet.
+
+2. **🔓 Reveal Phase** — After the betting deadline, reveal your original bet. The smart contract verifies your hash matches.
+
+3. **🏆 Claim Phase** — Once the market is resolved, winners claim their proportional share from the prize pool.
 
 ---
 
 ## 🏗️ Architecture
 
+### System Overview
+
+```mermaid
+flowchart TB
+    subgraph Frontend["🖥️ Frontend (React + Vite)"]
+        UI[User Interface]
+        WA[Wallet Adapter]
+        IDL[Anchor IDL]
+    end
+
+    subgraph Blockchain["⛓️ Solana Devnet"]
+        Program[EchoBet Program]
+        
+        subgraph Accounts["📦 Program Accounts"]
+            Market[Market PDA]
+            Commitment[Commitment PDA]
+            Vault[Vault PDA]
+        end
+    end
+
+    subgraph User["👤 User"]
+        Phantom[Phantom Wallet]
+        LocalStorage[Local Storage\n- Salt backup]
+    end
+
+    User --> Frontend
+    Phantom <--> WA
+    WA <--> Program
+    Frontend --> IDL --> Program
+    Program --> Accounts
+    LocalStorage -.->|Salt for reveal| Frontend
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         EchoBet Pro                             │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐         │
-│  │   CREATE    │    │   COMMIT    │    │   REVEAL    │         │
-│  │   MARKET    │───▶│    BET      │───▶│    BET      │         │
-│  └─────────────┘    └─────────────┘    └─────────────┘         │
-│        │                   │                  │                 │
-│        ▼                   ▼                  ▼                 │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐         │
-│  │   Market    │    │ Commitment  │    │   Market    │         │
-│  │    PDA      │    │    PDA      │    │   Pools     │         │
-│  └─────────────┘    └─────────────┘    └─────────────┘         │
-│                            │                  │                 │
-│                            ▼                  │                 │
-│                     ┌─────────────┐           │                 │
-│                     │    Vault    │◀──────────┘                 │
-│                     │    PDA      │                             │
-│                     └─────────────┘                             │
-│                            │                                    │
-│        ┌───────────────────┼───────────────────┐               │
-│        ▼                   ▼                   ▼               │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐         │
-│  │   RESOLVE   │    │    CLAIM    │    │   PAYOUT    │         │
-│  │   MARKET    │───▶│  WINNINGS   │───▶│  TO USER    │         │
-│  └─────────────┘    └─────────────┘    └─────────────┘         │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+
+### On-Chain Account Structure
+
+```mermaid
+erDiagram
+    MARKET ||--o{ COMMITMENT : "has many"
+    MARKET ||--|| VAULT : "owns"
+    
+    MARKET {
+        pubkey creator
+        pubkey oracle
+        u64 market_id
+        string question
+        i64 deadline
+        i64 reveal_deadline
+        enum status
+        u8 outcome
+        u64 total_pool
+        u64 yes_pool
+        u64 no_pool
+        u32 yes_count
+        u32 no_count
+    }
+    
+    COMMITMENT {
+        pubkey market
+        pubkey user
+        bytes32 commitment_hash
+        u64 amount
+        u8 revealed_outcome
+        bytes32 revealed_salt
+        bool is_revealed
+        bool is_claimed
+    }
+    
+    VAULT {
+        lamports balance
+        pubkey market
+    }
+```
+
+### Instruction Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant P as Program
+    participant V as Vault PDA
+
+    Note over U,V: 📝 Phase 1: Create & Commit
+    U->>F: Create Market
+    F->>P: create_market(question, deadline)
+    P->>P: Initialize Market + Vault PDAs
+    
+    U->>F: Place Bet (amount, YES/NO)
+    F->>F: Generate salt, compute hash
+    F->>P: commit_bet(hash, amount)
+    P->>V: Transfer SOL to vault
+    F->>F: Save salt to localStorage
+
+    Note over U,V: 🔓 Phase 2: Reveal
+    U->>F: Reveal Bet
+    F->>F: Load salt from localStorage
+    F->>P: reveal_bet(outcome, salt)
+    P->>P: Verify hash matches
+    P->>P: Update pool counts
+
+    Note over U,V: ⚖️ Phase 3: Resolve & Claim
+    U->>F: Resolve Market (Oracle only)
+    F->>P: resolve_market(winning_outcome)
+    
+    U->>F: Claim Winnings
+    F->>P: claim_winnings()
+    P->>P: Calculate proportional payout
+    V->>U: Transfer SOL to winner
 ```
 
 ---
 
-## 🔐 How Commit-Reveal Works
+## 🛠️ Tech Stack
 
-### The Problem
-In traditional prediction markets, everyone sees your bet. If a whale bets $100k on "Yes," others copy them, moving odds before you can react.
+### Backend (Solana Program)
+| Technology | Purpose |
+|------------|---------|
+| **Anchor 0.32.1** | Solana development framework |
+| **Rust** | Smart contract language |
+| **SHA-256** | Commitment hash generation |
+| **PDAs** | Secure account derivation |
 
-### The Solution
-EchoBet uses a two-phase commit-reveal scheme:
+### Frontend
+| Technology | Purpose |
+|------------|---------|
+| **React 18** | UI framework |
+| **TypeScript** | Type safety |
+| **Vite 7** | Build tool |
+| **TailwindCSS** | Styling |
+| **@solana/wallet-adapter** | Wallet integration |
+| **@coral-xyz/anchor** | Program interaction |
 
-**Phase 1: COMMIT (Before Deadline)**
-```
-User creates: hash = SHA256(amount || outcome || salt)
-User sends:   hash + amount (SOL locked in vault)
-Visible:      Only the hash and amount
-Hidden:       Which side (Yes/No) they bet on
+### Infrastructure
+| Service | Purpose |
+|---------|---------|
+| **Solana Devnet** | Blockchain network |
+| **Vercel** | Frontend hosting |
+| **GitHub** | Version control |
+
+---
+
+## 🔐 Security Highlights
+
+| Security Feature | Implementation |
+|------------------|----------------|
+| **Commitment Scheme** | SHA-256 hash of (amount + outcome + 32-byte salt) |
+| **Front-Running Prevention** | Bets hidden until reveal phase ends |
+| **PDA Vaults** | Funds controlled by program, not individuals |
+| **Time-Locked Phases** | Strict deadline enforcement on-chain |
+| **Oracle Authorization** | Only designated resolver can set outcome |
+| **Duplicate Prevention** | One commitment per user per market |
+| **Overflow Protection** | Safe math on all pool calculations |
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- Rust & Cargo
+- Solana CLI
+- Anchor CLI 0.32.1
+
+### Clone & Install
+
+```bash
+# Clone the repository
+git clone https://github.com/TobieTom/echobet-pro.git
+cd echobet-pro
+
+# Install dependencies
+npm install
+cd app && npm install && cd ..
 ```
 
-**Phase 2: REVEAL (After Deadline)**
-```
-User sends:   outcome + salt
-Program:      Verifies SHA256(amount || outcome || salt) == stored hash
-Result:       Bet is revealed and added to Yes/No pool
+### Run Tests
+
+```bash
+# Start local validator and run tests
+anchor test
 ```
 
-**Phase 3: CLAIM (After Resolution)**
+### Local Development
+
+```bash
+# Terminal 1: Start local validator
+solana-test-validator
+
+# Terminal 2: Deploy program
+anchor build
+anchor deploy
+
+# Terminal 3: Start frontend
+cd app
+npm run dev
 ```
-Winner's payout = their_bet + (their_bet / winning_pool) × losing_pool
-```
+
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+---
+
+## 🌐 Devnet Deployment
+
+| Resource | Value |
+|----------|-------|
+| **Program ID** | `HTDC5bDN6u7q1FCYnEuevztZM1ZqKcD9ujPTTLwNfTCc` |
+| **Network** | Solana Devnet |
+| **Live Demo** | [echobet-pro.vercel.app](https://echobet-pro.vercel.app) |
+| **Explorer** | [View on Solana Explorer](https://explorer.solana.com/address/HTDC5bDN6u7q1FCYnEuevztZM1ZqKcD9ujPTTLwNfTCc?cluster=devnet) |
+
+### Testing on Devnet
+
+1. Install [Phantom Wallet](https://phantom.app/)
+2. Switch to **Devnet** in Phantom settings
+3. Get devnet SOL from [faucet.solana.com](https://faucet.solana.com)
+4. Visit [echobet-pro.vercel.app](https://echobet-pro.vercel.app)
+5. Connect wallet and start betting!
 
 ---
 
 ## 📁 Project Structure
 
 ```
-echobet_pro/
-├── programs/echobet_pro/
-│   ├── src/
-│   │   └── lib.rs              # All program code (single-file architecture)
-│   └── Cargo.toml
+echobet-pro/
+├── programs/
+│   └── echobet_pro/
+│       └── src/
+│           ├── lib.rs          # Main program logic
+│           ├── state.rs        # Account structures
+│           └── errors.rs       # Custom errors
+├── app/
+│   └── src/
+│       ├── pages/
+│       │   ├── Markets.tsx     # Market listing
+│       │   ├── CreateMarket.tsx
+│       │   ├── MarketDetail.tsx
+│       │   └── Dashboard.tsx
+│       ├── components/
+│       ├── hooks/
+│       │   ├── useProgram.ts   # Anchor integration
+│       │   └── useBetStorage.ts
+│       ├── utils/
+│       │   ├── commitment.ts   # Hash generation
+│       │   └── pda.ts          # PDA derivation
+│       └── idl/
+│           └── echobet_pro.json
 ├── tests/
 │   └── echobet_pro.ts          # 23 comprehensive tests
-├── app/                        # React frontend (coming soon)
 ├── Anchor.toml
-├── Cargo.toml
-├── package.json
 └── README.md
-```
-
-> **Note:** Single-file architecture is a workaround for [Anchor 0.32 module bug](https://github.com/coral-xyz/anchor/issues/3690).
-
----
-
-## 🛠️ Quick Start
-
-### Prerequisites
-
-- Rust 1.70+
-- Solana CLI 1.18+
-- Anchor 0.32+
-- Node.js 18+
-- Yarn
-
-### Install & Build
-
-```bash
-# Clone the repo
-git clone https://github.com/yourusername/echobet-pro.git
-cd echobet-pro
-
-# Install dependencies
-yarn install
-
-# Build the program
-anchor build
-
-# Run tests (starts local validator automatically)
-anchor test
-```
-
-### Deploy to Devnet
-
-```bash
-# Configure for devnet
-solana config set --url devnet
-
-# Airdrop SOL for deployment
-solana airdrop 2
-
-# Deploy
-anchor deploy --provider.cluster devnet
-
-# Verify deployment
-solana program show <PROGRAM_ID>
 ```
 
 ---
@@ -162,111 +337,54 @@ solana program show <PROGRAM_ID>
 ## 🧪 Test Coverage
 
 ```
-  EchoBet Pro
-    create_market
-      ✔ creates a market successfully
-      ✔ fails with question too long
-      ✔ fails with deadline in past
-      ✔ allows creator as oracle
-    commit_bet
-      ✔ commits a bet successfully
-      ✔ allows multiple users to commit
-      ✔ fails with zero bet amount
-      ✔ fails if user already committed
-    reveal_bet
-      ✔ reveals bet successfully after deadline
-      ✔ reveals second user bet (No)
-      ✔ fails with wrong salt (commitment mismatch)
-      ✔ fails if already revealed
-    resolve_market
-      ✔ oracle can resolve market
-      ✔ fails to resolve already resolved market
-      ✔ creator can also resolve market
-      ✔ unauthorized user cannot resolve
-      ✔ fails with invalid outcome
-    claim_winnings
-      ✔ winner claims winnings successfully
-      ✔ loser cannot claim
-      ✔ winner cannot double claim
-      ✔ cannot claim from unresolved market
-    Full Integration Flow
-      ✔ complete market lifecycle with multiple participants
-    Edge Cases
-      ✔ handles market with all bets on one side
+✓ Creates a market (409ms)
+✓ Commits a bet (YES) (452ms)
+✓ Commits a bet (NO) (443ms)
+✓ Prevents duplicate commits (201ms)
+✓ Reveals a bet correctly (389ms)
+✓ Rejects invalid reveal (wrong salt) (198ms)
+✓ Rejects invalid reveal (wrong outcome) (195ms)
+✓ Resolves market as oracle (367ms)
+✓ Rejects unauthorized resolver (189ms)
+✓ Claims winnings for winner (412ms)
+✓ Rejects claim for loser (187ms)
+✓ Rejects double claim (184ms)
+... and 11 more tests
 
-  23 passing
+23 passing (8.2s)
 ```
 
 ---
 
-## 🔒 Security Considerations
+## 🎯 Future Roadmap
 
-| Concern | Mitigation |
-|---------|------------|
-| **Front-running** | Commit-reveal ensures bets are hidden until deadline |
-| **Hash collision** | SHA256 is collision-resistant; 32-byte salt adds entropy |
-| **Overflow attacks** | All arithmetic uses `checked_add`, `checked_mul`, `checked_div` |
-| **Unauthorized resolution** | Only oracle OR creator can resolve markets |
-| **Double claims** | `is_claimed` flag prevents multiple withdrawals |
-| **Vault security** | PDA-controlled vault with program-only transfer authority |
-| **Reentrancy** | Anchor's account model prevents reentrancy by design |
-
-### Audit Status
-⚠️ **Unaudited** - This is hackathon code. Do not use in production without a professional security audit.
-
----
-
-## 🗺️ Roadmap
-
-- [x] Core smart contract
-- [x] Commit-reveal betting
-- [x] PDA vault payouts
-- [x] Comprehensive test suite
-- [ ] React frontend
-- [ ] Pyth oracle integration
-- [ ] Multi-outcome markets
-- [ ] Market creator fees
-- [ ] Liquidity incentives
-- [ ] Mobile app
-
----
-
-## 🏆 Hackathon Submission
-
-**Event:** Indie.fun Hackathon  
-**Track:** DeFi / Prediction Markets  
-**Deadline:** December 12, 2025
-
-### Why EchoBet Pro?
-
-1. **Novel Approach** - First Solana prediction market with commit-reveal privacy
-2. **Real Problem** - Front-running and whale manipulation plague existing markets
-3. **Complete Solution** - Fully functional backend with 23 passing tests
-4. **Production Path** - Clear roadmap to mainnet deployment
+- [ ] **Mainnet Deployment** — Launch on Solana mainnet
+- [ ] **Multiple Outcomes** — Support markets with 3+ options
+- [ ] **Decentralized Oracles** — Integrate Pyth/Chainlink for resolution
+- [ ] **Mobile App** — React Native companion app
+- [ ] **Liquidity Pools** — AMM-style market making
+- [ ] **Governance Token** — DAO for protocol decisions
 
 ---
 
 ## 👥 Team
 
-- **Tobias** - Full-stack developer, Solana/Anchor
+Built with ☕ and 🎵 for the **Indie.fun Hackathon**
 
 ---
 
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) for details.
-
----
-
-## 🔗 Links
-
-- [Live Demo](#) (coming soon)
-- [Devnet Program](#) (coming soon)
-- [Twitter](#)
-- [Discord](#)
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
 <p align="center">
-  Built with ❤️ for the Indie.fun Hackathon
+  <strong>🎲 EchoBet Pro — Where Privacy Meets Prediction</strong>
+</p>
+
+<p align="center">
+  <a href="https://echobet-pro.vercel.app">Try the Demo</a> •
+  <a href="https://github.com/TobieTom/echobet-pro">View Source</a> •
+  <a href="https://explorer.solana.com/address/HTDC5bDN6u7q1FCYnEuevztZM1ZqKcD9ujPTTLwNfTCc?cluster=devnet">Explore On-Chain</a>
 </p>
