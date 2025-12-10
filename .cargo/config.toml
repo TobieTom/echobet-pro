@@ -1,0 +1,15 @@
+[target.'cfg(all())']
+rustflags = [
+    "--cfg=anchor_debug",
+    "--cfg=custom_heap",
+    "--cfg=custom_panic",
+    "--cfg=no_log_ix_name",
+]
+
+[build]
+rustflags = [
+    "--cfg=anchor_debug",
+    "--cfg=custom_heap",
+    "--cfg=custom_panic",
+    "--cfg=no_log_ix_name",
+]

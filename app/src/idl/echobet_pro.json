@@ -1,0 +1,516 @@
+{
+    "version": "0.1.0",
+    "name": "echobet_pro",
+    "instructions": [
+        {
+            "name": "claimWinnings",
+            "accounts": [
+                {
+                    "name": "user",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "market",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "commitment",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "vault",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": []
+        },
+        {
+            "name": "commitBet",
+            "accounts": [
+                {
+                    "name": "user",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "market",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "commitment",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "vault",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "params",
+                    "type": {
+                        "defined": "CommitBetParams"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "createMarket",
+            "accounts": [
+                {
+                    "name": "creator",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "market",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "vault",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "oracle",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "params",
+                    "type": {
+                        "defined": "CreateMarketParams"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "resolveMarket",
+            "accounts": [
+                {
+                    "name": "resolver",
+                    "isMut": false,
+                    "isSigner": true
+                },
+                {
+                    "name": "market",
+                    "isMut": true,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "params",
+                    "type": {
+                        "defined": "ResolveMarketParams"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "revealBet",
+            "accounts": [
+                {
+                    "name": "user",
+                    "isMut": false,
+                    "isSigner": true
+                },
+                {
+                    "name": "market",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "commitment",
+                    "isMut": true,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "params",
+                    "type": {
+                        "defined": "RevealBetParams"
+                    }
+                }
+            ]
+        }
+    ],
+    "accounts": [
+        {
+            "name": "Commitment",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "market",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "user",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "commitmentHash",
+                        "type": {
+                            "array": [
+                                "u8",
+                                32
+                            ]
+                        }
+                    },
+                    {
+                        "name": "amount",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "revealedOutcome",
+                        "type": {
+                            "option": "u8"
+                        }
+                    },
+                    {
+                        "name": "revealedSalt",
+                        "type": {
+                            "option": {
+                                "array": [
+                                    "u8",
+                                    32
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "name": "isRevealed",
+                        "type": "bool"
+                    },
+                    {
+                        "name": "isClaimed",
+                        "type": "bool"
+                    },
+                    {
+                        "name": "committedAt",
+                        "type": "i64"
+                    },
+                    {
+                        "name": "revealedAt",
+                        "type": "i64"
+                    },
+                    {
+                        "name": "bump",
+                        "type": "u8"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Market",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "creator",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "oracle",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "marketId",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "question",
+                        "type": "string"
+                    },
+                    {
+                        "name": "deadline",
+                        "type": "i64"
+                    },
+                    {
+                        "name": "revealDeadline",
+                        "type": "i64"
+                    },
+                    {
+                        "name": "status",
+                        "type": {
+                            "defined": "MarketStatus"
+                        }
+                    },
+                    {
+                        "name": "outcome",
+                        "type": {
+                            "option": "u8"
+                        }
+                    },
+                    {
+                        "name": "totalPool",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "yesPool",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "noPool",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "yesCount",
+                        "type": "u32"
+                    },
+                    {
+                        "name": "noCount",
+                        "type": "u32"
+                    },
+                    {
+                        "name": "createdAt",
+                        "type": "i64"
+                    },
+                    {
+                        "name": "resolvedAt",
+                        "type": "i64"
+                    },
+                    {
+                        "name": "bump",
+                        "type": "u8"
+                    },
+                    {
+                        "name": "vaultBump",
+                        "type": "u8"
+                    }
+                ]
+            }
+        }
+    ],
+    "types": [
+        {
+            "name": "CommitBetParams",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "commitmentHash",
+                        "type": {
+                            "array": [
+                                "u8",
+                                32
+                            ]
+                        }
+                    },
+                    {
+                        "name": "amount",
+                        "type": "u64"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CreateMarketParams",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "marketId",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "question",
+                        "type": "string"
+                    },
+                    {
+                        "name": "deadline",
+                        "type": "i64"
+                    },
+                    {
+                        "name": "revealPeriod",
+                        "type": {
+                            "option": "i64"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "ResolveMarketParams",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "outcome",
+                        "type": "u8"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "RevealBetParams",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "outcome",
+                        "type": "u8"
+                    },
+                    {
+                        "name": "salt",
+                        "type": {
+                            "array": [
+                                "u8",
+                                32
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "MarketStatus",
+            "type": {
+                "kind": "enum",
+                "variants": [
+                    {
+                        "name": "Open"
+                    },
+                    {
+                        "name": "Revealing"
+                    },
+                    {
+                        "name": "Resolved"
+                    },
+                    {
+                        "name": "Cancelled"
+                    }
+                ]
+            }
+        }
+    ],
+    "errors": [
+        {
+            "code": 6000,
+            "name": "MarketNotExpired",
+            "msg": "Market deadline has not passed yet"
+        },
+        {
+            "code": 6001,
+            "name": "MarketExpired",
+            "msg": "Market deadline has already passed"
+        },
+        {
+            "code": 6002,
+            "name": "MarketAlreadyResolved",
+            "msg": "Market has already been resolved"
+        },
+        {
+            "code": 6003,
+            "name": "MarketNotResolved",
+            "msg": "Market is not resolved yet"
+        },
+        {
+            "code": 6004,
+            "name": "RevealPeriodEnded",
+            "msg": "Reveal period has ended"
+        },
+        {
+            "code": 6005,
+            "name": "CommitmentMismatch",
+            "msg": "Commitment hash does not match"
+        },
+        {
+            "code": 6006,
+            "name": "AlreadyRevealed",
+            "msg": "Bet has already been revealed"
+        },
+        {
+            "code": 6007,
+            "name": "NotRevealed",
+            "msg": "Bet has not been revealed yet"
+        },
+        {
+            "code": 6008,
+            "name": "ZeroBetAmount",
+            "msg": "Bet amount must be greater than zero"
+        },
+        {
+            "code": 6009,
+            "name": "DidNotWin",
+            "msg": "User did not win"
+        },
+        {
+            "code": 6010,
+            "name": "AlreadyClaimed",
+            "msg": "Winnings have already been claimed"
+        },
+        {
+            "code": 6011,
+            "name": "UnauthorizedResolver",
+            "msg": "Unauthorized resolver"
+        },
+        {
+            "code": 6012,
+            "name": "InvalidSigner",
+            "msg": "Invalid signer"
+        },
+        {
+            "code": 6013,
+            "name": "QuestionTooLong",
+            "msg": "Question too long"
+        },
+        {
+            "code": 6014,
+            "name": "DeadlineInPast",
+            "msg": "Deadline must be in the future"
+        },
+        {
+            "code": 6015,
+            "name": "InvalidOutcome",
+            "msg": "Invalid outcome"
+        },
+        {
+            "code": 6016,
+            "name": "InvalidMarketId",
+            "msg": "Invalid market ID"
+        },
+        {
+            "code": 6017,
+            "name": "Overflow",
+            "msg": "Arithmetic overflow"
+        },
+        {
+            "code": 6018,
+            "name": "DivisionByZero",
+            "msg": "Division by zero"
+        },
+        {
+            "code": 6019,
+            "name": "InsufficientPoolFunds",
+            "msg": "Insufficient pool funds"
+        }
+    ]
+}
