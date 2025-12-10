@@ -369,7 +369,7 @@ echobet-pro/
 
 ## 👥 Team
 
-Built with ☕ and 🎵 for the **Indie.fun Hackathon**
+Built by TobiasBond for the **Indie.fun Hackathon**
 
 ---
 
